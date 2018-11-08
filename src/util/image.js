@@ -18,7 +18,21 @@ function createImage(image: *, {width, height}: Size, channels: number, data?: U
     if (!data) {
         data = new Uint8Array(width * height * channels);
     } else if (data.length !== width * height * channels) {
-        throw new RangeError('mismatched image size');
+        // FIXME: Some font glyph data we're seeing back from ArcGIS tiles are
+        // returning mismatched image sizes. Since these glyphs don't seem
+        // absolutely necessary to render most of the rest of the map, go ahead
+        // and continue with empty image data in these cases so the rest of the
+        // map can load. But we need to better figure this out and see where
+        // the error really occurs and how to better address this.
+        //
+        // For reference, this is reproducible when zooming into the zip code
+        // "21203," which tries loading
+        // "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/resources/fonts/Arial%20Regular/8192-8447.pbf"
+        // which is where this error seems to stem from.
+        //
+        // throw new RangeError('mismatched image size');
+        console.error('mismatched image size');
+        data = new Uint8Array(width * height * channels);
     }
     image.width = width;
     image.height = height;
